@@ -1,21 +1,264 @@
 #!/usr/bin/env python3
-
-# Standard library imports
-
-# Remote library imports
-from flask import request
+from flask import request, session, make_response
 from flask_restful import Resource
-
-# Local imports
 from config import app, db, api
-# Add your model imports
-
-
-# Views go here!
+from models import User, Player, Game, ChatMessage
 
 @app.route('/')
 def index():
-    return '<h1>Phase 4 Project Server</h1>'
+    return '<h1>Avalon Server!</h1>'
+
+######################## USER ROUTES ###########################
+
+
+class UserById(Resource):
+    def get(self, id):
+        user = User.query.filter(User.id == id).first()
+        return make_response(user.to_dict(), 200)
+    
+    def patch(self, id):
+        user = User.query.filter(User.id == id).first()
+        data = request.get_json()
+        try:
+            for field in data:
+                setattr(user, field, data[field])
+            db.session.add(user)
+            db.session.commit()
+            
+            return make_response(user.to_dict(), 202)
+        except ValueError as e:
+            print(e.str())
+            return make_response(({"error": ["validation errors"]}), 406)
+    def delete(self, id):
+        user = User.query.filter(User.id == id).first()
+        db.session.delete(user)
+        db.session.commit()
+
+        return make_response({}, 204)
+    
+api.add_resource(UserById, '/users/<int:id>')
+    
+class Users(Resource):
+    def post(self):
+        data = request.get_json()
+
+        try:
+            new_user = User(
+                username = data.get("username"),
+                _password_hash = data.get("password")
+            )
+            db.session.add(new_user)
+            db.session.commit()
+        except ValueError:
+            return make_response({"error": ["validation errors"]},406)
+        
+api.add_resource(Users, '/users')
+
+class PlayersByUser(Resource):
+    def get(self, user_id):
+        players = [p.to_dict() for p in Player.query.filter(Player.user_id == user_id).all()]
+        make_response(players, 200)
+
+api.add_resource(PlayersByUser, '/users/<int:id>/players')
+
+
+####################### Games routes ######################
+class GameById(Resource):
+    def get(self, id):
+        game = Game.query.filter(Game.id == id).first()
+        return make_response(game.to_dict(), 200)
+    
+    def patch(self, id):
+        game = Game.query.filter(Game.id == id).first()
+        data = request.get_json()
+        try:
+            for field in data:
+                setattr(game, field, data[field])
+            db.session.add(game)
+            db.session.commit()
+            
+            return make_response(game.to_dict(), 202)
+        except ValueError as e:
+            print(e.str())
+            return make_response(({"error": ["validation errors"]}), 406)
+    def delete(self, id):
+        game = Game.query.filter(Game.id == id).first()
+        db.session.delete(game)
+        db.session.commit()
+
+        return make_response({}, 204)
+    
+api.add_resource(GameById, '/games/<int:id>')
+
+
+class Games(Resource):
+    def get (self):
+        # add get all games
+        pass
+    def post(self):
+        data = request.get_json()
+
+        try:
+            new_game = Game(
+                size = data.get("size"),
+                round = 0,
+                phase = "pregame",
+                room_code = data.get('roomCode'),
+                percival = data.get('percival'),
+                mordred = data.get('mordred'),
+                oberon = data.get('oberon'),
+                morgana = data.get('morgana')
+            )
+            db.session.add(new_game)
+            db.session.commit()
+        except ValueError:
+            return make_response({"error": ["validation errors"]},406)
+        
+api.add_resource(Games, '/games')
+
+class PlayersByGame(Resource):
+    def get(self, game_id):
+        players = [p.to_dict() for p in Player.query.filter(Player.game_id == game_id).all()]
+        make_response(players, 200)
+
+api.add_resource(PlayersByGame, '/games/<int:id>/players')
+
+
+######################################## player routes ############################################
+
+class PlayerById(Resource):
+    def get(self, id):
+        player = Player.query.filter(Player.id == id).first()
+        return make_response(player.to_dict(), 200)
+    
+    def patch(self, id):
+        player = Player.query.filter(Player.id == id).first()
+        data = request.get_json()
+        try:
+            for field in data:
+                setattr(player, field, data[field])
+            db.session.add(player)
+            db.session.commit()
+            
+            return make_response(player.to_dict(), 202)
+        except ValueError as e:
+            print(e.str())
+            return make_response(({"error": ["validation errors"]}), 406)
+    def delete(self, id):
+        player = Player.query.filter(Player.id == id).first()
+        db.session.delete(player)
+        db.session.commit()
+
+        return make_response({}, 204)
+    
+api.add_resource(PlayerById, '/players/<int:id>')
+
+
+class Players(Resource):
+    def post(self):
+        data = request.get_json()
+
+        try:
+            new_player = Player(
+                user_id = data.get('userID'),
+                game_id = data.get('gameID'),
+                role = data.get('role'),
+                owner = data.get('owner'),
+                winner = False
+            )
+            db.session.add(new_player)
+            db.session.commit()
+        except ValueError:
+            return make_response({"error": ["validation errors"]},406)
+        
+api.add_resource(Players, '/players')
+
+
+
+################################ Chat Messages ###########################
+
+class MessageById(Resource):
+    def get(self, id):
+        message = ChatMessage.query.filter(ChatMessage.id == id).first()
+        return make_response(message.to_dict(), 200)
+    
+    def patch(self, id):
+        message = ChatMessage.query.filter(ChatMessage.id == id).first()
+        data = request.get_json()
+        try:
+            for field in data:
+                setattr(message, field, data[field])
+            db.session.add(message)
+            db.session.commit()
+            
+            return make_response(message.to_dict(), 202)
+        except ValueError as e:
+            print(e.str())
+            return make_response(({"error": ["validation errors"]}), 406)
+    def delete(self, id):
+        message = ChatMessage.query.filter(ChatMessage.id == id).first()
+        db.session.delete(message)
+        db.session.commit()
+
+        return make_response({}, 204)
+    
+api.add_resource(MessageById, '/messages/<int:id>')
+
+
+class Messages(Resource):
+    def post(self):
+        data = request.get_json()
+        try:
+            new_message = ChatMessage(
+                player_id = data.get('playerID'),
+                message = data.get('message')
+            )
+            db.session.add(new_message)
+            db.session.commit()
+        except ValueError:
+            return make_response({"error": ["validation errors"]},406)
+        
+api.add_resource(Messages, '/messages')
+
+
+################################################## log in stuff #######################################
+class Login(Resource):
+    def post(self):
+        data = request.get_json()
+        username= data['username']
+        password= data['password']
+        user = User.query.filter(User.name == username).first()
+        if user:
+            if user.authenticate(password):
+                session['user_id'] = user.id
+                return user.to_dict(), 200
+            else:
+                return {"Error": "password is wrong"}, 401
+        return {"Error": "User doesn't exist"}, 401
+
+api.add_resource(Login, '/login')
+
+class CheckSession(Resource):
+    def get(self):
+        user = User.query.filter(User.id == session.get('user_id')).first()
+        if user:
+            return user.to_dict(only=('name', 'id', 'profile_image'))
+        else:
+            return {'message': 'Not Authorized'}, 401
+        
+api.add_resource(CheckSession, '/check_session')
+
+
+class Logout(Resource):
+    def delete(self):
+        session['user_id'] = None
+        return {}, 204
+    
+api.add_resource(Logout, '/logout')
+
+
+if __name__ == '__main__':
+    app.run(port=5555, debug=True)
 
 
 if __name__ == '__main__':
