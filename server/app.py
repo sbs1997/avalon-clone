@@ -87,7 +87,7 @@ class GameById(Resource):
         db.session.commit()
 
         return make_response({}, 204)
-    
+
 api.add_resource(GameById, '/games/<int:id>')
 
 
@@ -221,7 +221,7 @@ class Messages(Resource):
 api.add_resource(Messages, '/messages')
 
 
-################################################## log in stuff #######################################
+########################################### log in stuff #######################################
 class Login(Resource):
     def post(self):
         data = request.get_json()

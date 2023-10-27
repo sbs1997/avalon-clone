@@ -21,7 +21,7 @@ if __name__ == '__main__':
             users = []
             for i in range(20):
                 new_user = User(
-                    username = fake.first_name(),
+                    username = fake.first_name()+str(i),
                     password_hash = '1234'
                     )
                 users.append(new_user)
@@ -48,8 +48,8 @@ if __name__ == '__main__':
         def create_players():
             players = []
             for i in range(5):
+                random_num = random.randint(1,15)
                 for j in range (5):
-                    random_num = random.randint(1,15)
                     new_player = Player(
                         user_id = random_num+j,
                         game_id = i+1,
