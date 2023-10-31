@@ -32,6 +32,7 @@ if __name__ == '__main__':
             games=[]
             for i in range(5):
                 new_game = Game(
+                    title = fake.word(),
                     size = 5,
                     round = 0,
                     phase = "pregame",

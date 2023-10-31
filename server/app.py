@@ -1,9 +1,43 @@
 #!/usr/bin/env python3
 from flask import request, session, make_response
 from flask_restful import Resource
-from config import app, db, api
+from config import app, db, api, socket_io
 from models import User, Player, Game, ChatMessage
+from flask_socketio import join_room, leave_room
 
+
+####################### SOCKET STUFF #########################
+
+@socket_io.on('connect')
+def handle_connect():
+    print('new connection')
+    # print(request.sid)
+    # session["user"] = request.sid
+
+@socket_io.on('client-message')
+def chat_message(playerID, message, room):
+    new_message = ChatMessage(player_id = playerID, message = message)
+    db.session.add(new_message)
+    db.session.commit()
+    
+    socket_io.emit('server-message', new_message.to_dict(), room = room)
+    
+@socket_io.on('set-room')
+def change_room(room):
+    join_room(room)
+    # if room == "1":
+    #     leave_room("2")
+    #     join_room(room)
+    # else:
+    #     leave_room("1")
+    #     join_room(room)
+
+@socket_io.on("disconnect")
+def disconnected():
+    """event listener when client disconnects to the server"""
+    print("user disconnected")
+
+######################### ROUTES!!!!! ##########################
 @app.route('/')
 def index():
     return '<h1>Avalon Server!</h1>'
@@ -66,6 +100,8 @@ api.add_resource(PlayersByUser, '/users/<int:id>/players')
 class GameById(Resource):
     def get(self, id):
         game = Game.query.filter(Game.id == id).first()
+        if not game:
+            return make_response(({"error": "game not found"}),404)
         return make_response(game.to_dict(), 200)
     
     def patch(self, id):
@@ -93,8 +129,9 @@ api.add_resource(GameById, '/games/<int:id>')
 
 class Games(Resource):
     def get (self):
-        # add get all games
-        pass
+        games = [g.to_dict() for g in Game.query.all()]
+        return make_response(games, 200)
+    
     def post(self):
         data = request.get_json()
 
@@ -168,6 +205,9 @@ class Players(Resource):
             )
             db.session.add(new_player)
             db.session.commit()
+
+            return make_response(new_player.to_dict(), 201)
+
         except ValueError:
             return make_response({"error": ["validation errors"]},406)
         
@@ -215,10 +255,20 @@ class Messages(Resource):
             )
             db.session.add(new_message)
             db.session.commit()
+            return make_response(new_message.to_dict(), 201)
+        
         except ValueError:
             return make_response({"error": ["validation errors"]},406)
         
 api.add_resource(Messages, '/messages')
+
+
+class MessagesByRoom(Resource):
+    def get(self, id):
+        messages = [m.to_dict() for m in ChatMessage.query.join(Player).filter(Player.game_id == id).all()]
+        return make_response(messages, 200)
+
+api.add_resource(MessagesByRoom, '/messages/game/<int:id>')
 
 
 ########################################### log in stuff #######################################
@@ -227,7 +277,7 @@ class Login(Resource):
         data = request.get_json()
         username= data['username']
         password= data['password']
-        user = User.query.filter(User.name == username).first()
+        user = User.query.filter(User.username == username).first()
         if user:
             if user.authenticate(password):
                 session['user_id'] = user.id
@@ -242,7 +292,7 @@ class CheckSession(Resource):
     def get(self):
         user = User.query.filter(User.id == session.get('user_id')).first()
         if user:
-            return user.to_dict(only=('name', 'id', 'profile_image'))
+            return user.to_dict(only=('username', 'id'))
         else:
             return {'message': 'Not Authorized'}, 401
         
@@ -258,9 +308,5 @@ api.add_resource(Logout, '/logout')
 
 
 if __name__ == '__main__':
-    app.run(port=5555, debug=True)
-
-
-if __name__ == '__main__':
-    app.run(port=5555, debug=True)
-
+    # app.run(port=5555, debug=True)
+    socket_io.run(app, port=5555)

@@ -56,6 +56,7 @@ class Game(db.Model, SerializerMixin):
     __tablename__ = 'games'
 
     id = db.Column(db.Integer, primary_key = True)
+    title = db.Column(db.String)
     size = db.Column(db.Integer)
     round = db.Column(db.Integer)
     phase = db.Column(db.String)
@@ -67,7 +68,7 @@ class Game(db.Model, SerializerMixin):
 
     # relationships
     players = db.relationship('Player', back_populates = 'game')
-
+    serialize_rules = ('-players.game', '-players.user._password_hash',)
 
 class ChatMessage(db.Model, SerializerMixin):
     __tablename__ = 'chat_messages'
@@ -79,4 +80,4 @@ class ChatMessage(db.Model, SerializerMixin):
 
     player = db.relationship('Player', back_populates = 'chat_messages')
     
-    serialize_only = ('player.user.username', 'player.game_id', 'message', 'time')
+    serialize_only = ('player.user.username', 'player.user.id', 'player.game_id', 'message', 'time')

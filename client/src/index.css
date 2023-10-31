@@ -1,39 +1,32 @@
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
+  background-color: #1a1a1a;
   text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
 }
 
 body {
   margin: 0;
   display: flex;
-  place-items: center;
-  min-width: 320px;
+  align-items: center;
+  justify-content: center;
+  min-width: 100vw;
   min-height: 100vh;
 }
 
+h2 {
+  font-size: 1.8em;
+}
+.App{
+  width: 40vw;
+  border: 2px solid #242424;
+  padding: 0 1em 1em 1em;
+  border-radius: 10px;
+}
+
 h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+  font-size: 2.5em;
 }
 
 button {
@@ -43,27 +36,61 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: #242424;
   cursor: pointer;
   transition: border-color 0.25s;
 }
 button:hover {
   border-color: #646cff;
 }
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+
+input{
+  margin:1em;
+  margin-bottom: 0;
+  border: none;
+}
+input:focus{
+  /* box-shadow: 0.1em 0.1em #535bf2; */
+  outline: #aeb2f9 solid 1px;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+.title {
+  color: #646cff;
+}
+
+.chat-box {
+  height: 50vh;
+  width: 40vw;
+  background-color: #242424;
+  border: 1px #ffffff;
+  display: flex;
+  flex-flow: column-reverse;
+  overflow: scroll;
+}
+
+#chat-title{
+  min-height: 1.2em;
+  text-align: center;
+}
+
+.message{
+  display: flex;
+
+}
+
+.my-message{
+  white-space: pre;
+  color: #adadad
+}
+
+.their-message{
+  color: #646cff;
+  white-space: pre;
+}
+
+.game-card{
+  border: 1px solid #aeb2f9;
+  border-radius: 8px;
+  min-width: 33vw;
+  text-align: center;
 }
