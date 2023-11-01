@@ -2,7 +2,7 @@ import React from 'react'
 import LobbyDisplay from './LobbyDisplay'
 
 function Display({ phase, game, user, localPlayer, setGame, setPhase}) {
-    console.log(game)
+    // console.log(game)
     return (
         <div className='game-display'>
             {game ?

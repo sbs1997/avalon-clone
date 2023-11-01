@@ -3,6 +3,7 @@ import React from 'react'
 function LobbyDisplay({game, user, localPlayer, setGame}) {
     console.log(game)
     function handleLeave(){
+        // console.log(localPlayer)
         fetch(`/api/players/${localPlayer.id}`, {
             method: "DELETE",
         })

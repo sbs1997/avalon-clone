@@ -27,7 +27,7 @@ function ChatBox({user, game, localPlayer}) {
     }, []);
 
     useEffect(() => {
-        console.log("use effect")
+        // console.log("use effect")
         if (connected){
             // console.log('the thing!')
             socket.on('server-message', (serverMessage)=>{
@@ -40,7 +40,7 @@ function ChatBox({user, game, localPlayer}) {
                 console.log(msg);
             });
             }
-    }, [messages, connected])
+    }, [messages, connected, localPlayer])
     
     function sendMessage(playerID, message, room){
         socket.emit('client-message', playerID, message, room)
