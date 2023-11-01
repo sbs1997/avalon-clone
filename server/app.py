@@ -6,6 +6,24 @@ from models import User, Player, Game, ChatMessage
 from flask_socketio import join_room, leave_room
 
 
+
+def game_info(game_id, user_id):
+    game = Game.query.filter(Game.id == game_id).first()
+    player = Player.query.filter(Player.game_id == game_id).filter(Player.user_id == user_id).first()
+    response_game = game.to_dict(only=('id', 'title', 'size', 'round', 'phase', 'room_code', 'percival', 'mordred', 'oberon', 'morgana', 'players.user.username', 'players.user.id', 'players.leader', 'players.id'))
+    if not player:
+        response_game["role"] = 'imposter'
+    else:
+        if player.role == "good":
+            pass
+        if player.role == 'evil' or player.role == 'merlin':
+            evil_players = [p.user_id for p in Player.query.filter(Player.game_id == game_id).filter(Player.role == "evil").all()]
+            response_game['evils'] = evil_players
+        response_game["role"] = player.role
+        if player.owner:
+            response_game["owner"] = True
+    socket_io.emit('update-game', response_game)
+
 ####################### SOCKET STUFF #########################
 
 @socket_io.on('connect')
@@ -23,19 +41,24 @@ def chat_message(playerID, message, room):
     socket_io.emit('server-message', new_message.to_dict(), room = room)
     
 @socket_io.on('set-room')
-def change_room(room):
+def change_room(game_id, user_id):
+    room = f'game{game_id}'
     join_room(room)
-    # if room == "1":
-    #     leave_room("2")
-    #     join_room(room)
-    # else:
-    #     leave_room("1")
-    #     join_room(room)
+    game_info(game_id, user_id)
+
+@socket_io.on('message-request')
+def messages_by_game_id(game_id):
+    messages = [m.to_dict() for m in ChatMessage.query.join(Player).filter(Player.game_id == id).all()]
+    socket_io.emit('messages-fetched', messages)
+
+
 
 @socket_io.on("disconnect")
 def disconnected():
     """event listener when client disconnects to the server"""
     print("user disconnected")
+
+
 
 ######################### ROUTES!!!!! ##########################
 @app.route('/')

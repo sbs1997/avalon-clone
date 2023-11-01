@@ -8,11 +8,16 @@ function ChatBox({user, game, localPlayer, socket, connected}) {
     const [newMessage, setNewMessage] = useState("")
 
     useEffect(() => {
-        fetch(`/api/messages/game/${game.id}`)
-        .then(r=>r.json())
-        .then((serverMessages)=>{
+        // fetch(`/api/messages/game/${game.id}`)
+        // .then(r=>r.json())
+        // .then((serverMessages)=>{
+        //     setMessages(serverMessages)
+        // })
+        socket.on('messages-fetched', (serverMessages)=>{
+            console.log(serverMessages)
             setMessages(serverMessages)
         })
+        socket.emit('message-request', game.id)
     }, []);
 
     useEffect(() => {
@@ -36,6 +41,7 @@ function ChatBox({user, game, localPlayer, socket, connected}) {
     }
     
     function addMessage(message){
+        console.log(message)
         setMessages([...messages, message])
     }
 

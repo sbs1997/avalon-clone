@@ -24,19 +24,25 @@ function Game({ user }) {
         if (!user.id){
             navigate('/login')
         }
-        fetch(`/api/games/${gameId}/${user.id}`)
-        .then(r=>r.json())
-        .then((serverGame)=>{
-            setGame(serverGame)
-            if (serverGame.role !== "imposter"){
-                // console.log('in there!')
-                // console.log(user)
-                // console.log(serverGame)
-                setLocalPlayer(serverGame.players.filter((player)=>(player.user.id == user.id))[0])
-            }
-            socket = io('ws://localhost:5555');
-            setConnected(true)
-            socket.emit('set-room', `game${serverGame.id}`)
+        // fetch(`/api/games/${gameId}/${user.id}`)
+        // .then(r=>r.json())
+        // .then((serverGame)=>{
+        //     setGame(serverGame)
+        //     if (serverGame.role !== "imposter"){
+        //         // console.log('in there!')
+        //         // console.log(user)
+        //         // console.log(serverGame)
+        //         setLocalPlayer(serverGame.players.filter((player)=>(player.user.id == user.id))[0])
+        //     }
+        //     socket = io('ws://localhost:5555');
+        //     setConnected(true)
+        //     socket.emit('set-room', serverGame.id, user.id)
+        // })
+        socket = io('ws://localhost:5555');
+        setConnected(true)
+        socket.emit('set-room', gameId, user.id)
+        socket.on('update-game', (newGame)=>{
+            setGame(newGame)
         })
         return () => {
             socket.off('disconnected', (msg) => {
