@@ -1,29 +1,18 @@
 import React, { useState, useEffect } from 'react'
-import { io } from 'socket.io-client'
+// import { io } from 'socket.io-client'
 import Message from './Message'
 
-let socket
 
-function ChatBox({user, game, localPlayer}) {
+function ChatBox({user, game, localPlayer, socket, connected}) {
     const [messages, setMessages] = useState([])
     const [newMessage, setNewMessage] = useState("")
-    const [connected, setConnected] = useState(false)
 
     useEffect(() => {
-        socket = io('ws://localhost:5555');
-        setConnected(true)
-        socket.emit('set-room', `game${game.id}`)
         fetch(`/api/messages/game/${game.id}`)
         .then(r=>r.json())
         .then((serverMessages)=>{
-            // console.log(serverMessages)
             setMessages(serverMessages)
         })
-        return () => {
-          socket.off('disconnected', (msg) => {
-              console.log(msg);
-            });
-        }
     }, []);
 
     useEffect(() => {
