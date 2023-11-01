@@ -16,14 +16,14 @@ function Game({ user }) {
     if (!user.id){
       navigate('/login')
     }
-    // fetch(`/api/games/${gameId}/${user.id}`)
-    fetch(`/api/games/${gameId}`)
+    fetch(`/api/games/${gameId}/${user.id}`)
+    // fetch(`/api/games/${gameId}`)
     .then(r=>r.json())
     .then((serverGame)=>{
       setGame(serverGame)
-      if (user){
+      if (serverGame.role !== "imposter"){
         setLocalPlayer(serverGame.players.filter((player)=>(player.user.id == user.id))[0])
-      }// console.log(serverGame.players.filter((player)=>(player.user.id == user.id)))
+      }
     })
   },[])
 
@@ -32,18 +32,24 @@ function Game({ user }) {
 
   return (
     <div className='game-div'>
-      <h1>{game ? game.title : <></>}</h1>
-      <h2>Players:</h2>
-      {game ? game.players.map((player)=>{
-        console.log(player)
-          return <p key={game.players.indexOf(player)}>{player.user.username}</p>
-        })
-        :
-        <></>}
-      {game && user ? 
-        <ChatBox user={user} game={game} localPlayer={localPlayer}/>
-        :
-        <></>}
+      {game ? game.role == 'imposter' ?
+      <p>Sorry you're not in this game</p>
+      :
+        <><h1>{game ? game.title : <></>}</h1>
+        <h2>Players:</h2>
+        {game ? game.players.map((player)=>{
+            return <p key={game.players.indexOf(player)}>{player.user.username}</p>
+          })
+          :
+          <></>}
+        {game && user ? 
+          <ChatBox user={user} game={game} localPlayer={localPlayer}/>
+          :
+          <></>}
+          </>
+      :
+      <></>
+      }
     </div>
   )
 }

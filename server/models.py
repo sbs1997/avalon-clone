@@ -40,7 +40,9 @@ class Player(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key = True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     game_id = db.Column(db.Integer, db.ForeignKey('games.id'))
+    # can either be "good", "evil", "merlin"
     role = db.Column(db.String)
+    leader = db.Column(db.Boolean)
     owner = db.Column(db.Boolean)
     winner = db.Column(db.Boolean)
 
@@ -50,7 +52,7 @@ class Player(db.Model, SerializerMixin):
     chat_messages = db.relationship('ChatMessage', back_populates = 'player')
 
 
-    serialize_rules = ('-user.players', '-game.players', '-chat_messages')
+    serialize_rules = ('-user.players', '-game.players', '-chat_messages', '-user._password_hash')
 
 class Game(db.Model, SerializerMixin):
     __tablename__ = 'games'

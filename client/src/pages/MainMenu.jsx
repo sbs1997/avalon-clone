@@ -15,7 +15,6 @@ function MainMenu({user}) {
     .then(r=>r.json())
     .then(serverGames=>{
       setGames(serverGames)
-      console.log(serverGames)
     })
   },[])
 
