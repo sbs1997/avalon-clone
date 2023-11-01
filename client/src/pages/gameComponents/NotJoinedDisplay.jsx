@@ -1,6 +1,13 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 
-function NotJoinedDisplay({game, setGame, user}) {
+function NotJoinedDisplay({game, setGame, user, socket, connected}) {
+    useEffect(()=>{
+        if (connected){
+            socket.on('update-players', (newGame)=>{
+                setGame(newGame)
+            })
+        }
+    },[])
     function handleJoin(){
         const newPlayer = {
             userID: user.id,

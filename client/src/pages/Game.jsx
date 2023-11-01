@@ -52,10 +52,10 @@ function Game({ user }) {
         <p>Sorry you're not in this game and it has started</p>
         :
         game.role == 'imposter' ? 
-            <NotJoinedDisplay game={game} user={user} setGame={setGame}/>
+            <NotJoinedDisplay game={game} user={user} setGame={setGame} socket={socket} connected={connected}/>
             :
             <>
-            <Display phase={phase} setPhase={setPhase} game={game} setGame={setGame} localPlayer={localPlayer} user={user}/>
+            <Display phase={phase} setPhase={setPhase} game={game} setGame={setGame} localPlayer={localPlayer} user={user} socket={socket} connected={connected}/>
             {game && user && socket? 
                 <ChatBox socket={socket} user={user} game={game} localPlayer={localPlayer} connected={connected}/>
                 :
