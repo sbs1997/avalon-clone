@@ -164,17 +164,18 @@ class GameForPlayer(Resource):
     def get(self, game_id, user_id):
         game = Game.query.filter(Game.id == game_id).first()
         player = Player.query.filter(Player.game_id == game_id).filter(Player.user_id == user_id).first()
-        if not player:
-            return make_response({"role" : "imposter"}, 200)
         response_game = game.to_dict(only=('id', 'title', 'size', 'round', 'phase', 'room_code', 'percival', 'mordred', 'oberon', 'morgana', 'players.user.username', 'players.user.id', 'players.leader', 'players.id'))
-        if player.role == "good":
-            pass
-        if player.role == 'evil' or player.role == 'merlin':
-            evil_players = [p.user_id for p in Player.query.filter(Player.game_id == game_id).filter(Player.role == "evil").all()]
-            response_game['evils'] = evil_players
-        response_game["role"] = player.role
-        if player.owner:
-            response_game["owner"] = True
+        if not player:
+            response_game["role"] = 'imposter'
+        else:
+            if player.role == "good":
+                pass
+            if player.role == 'evil' or player.role == 'merlin':
+                evil_players = [p.user_id for p in Player.query.filter(Player.game_id == game_id).filter(Player.role == "evil").all()]
+                response_game['evils'] = evil_players
+            response_game["role"] = player.role
+            if player.owner:
+                response_game["owner"] = True
         return make_response(response_game, 200)
     
 api.add_resource(GameForPlayer, '/games/<int:game_id>/<int:user_id>')

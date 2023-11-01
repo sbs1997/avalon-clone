@@ -2,56 +2,58 @@ import React, { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import ChatBox from './gameComponents/ChatBox'
 import { useNavigate } from 'react-router-dom'
+import Display from './gameComponents/Display'
+import NotJoinedDisplay from './gameComponents/NotJoinedDisplay'
 
 
 function Game({ user }) {
-  let {gameId} = useParams()
-  const [game, setGame] = useState()
-  const [localPlayer, setLocalPlayer] = useState({})
-  const navigate = useNavigate()
-  
+let {gameId} = useParams()
+const [game, setGame] = useState()
+const [localPlayer, setLocalPlayer] = useState({})
+const [phase, setPhase] = useState("notStarted")
+const navigate = useNavigate()
 
-  useEffect(()=>{
+
+
+useEffect(()=>{
     console.log(user)
     if (!user.id){
-      navigate('/login')
+        navigate('/login')
     }
     fetch(`/api/games/${gameId}/${user.id}`)
-    // fetch(`/api/games/${gameId}`)
     .then(r=>r.json())
     .then((serverGame)=>{
-      setGame(serverGame)
-      if (serverGame.role !== "imposter"){
-        setLocalPlayer(serverGame.players.filter((player)=>(player.user.id == user.id))[0])
-      }
+        setGame(serverGame)
+        if (serverGame.role !== "imposter"){
+            // console.log('in there!')
+            // console.log(user)
+            // console.log(serverGame)
+            setLocalPlayer(serverGame.players.filter((player)=>(player.user.id == user.id))[0])
+        }
     })
-  },[])
+},[])
 
-  // console.log(localPlayer)
-  // console.log(localPlayer.id)
 
-  return (
+return (
     <div className='game-div'>
-      {game ? game.role == 'imposter' ?
-      <p>Sorry you're not in this game</p>
-      :
-        <><h1>{game ? game.title : <></>}</h1>
-        <h2>Players:</h2>
-        {game ? game.players.map((player)=>{
-            return <p key={game.players.indexOf(player)}>{player.user.username}</p>
-          })
-          :
-          <></>}
+    {game ? game.role == 'imposter' && game.round > 0?
+    <p>Sorry you're not in this game and it has started</p>
+    :
+    game.role == 'imposter' ? 
+        <NotJoinedDisplay game={game} user={user} setGame={setGame}/>
+        :
+        <>
+        <Display phase={phase} setPhase={setPhase} game={game} setGame={setGame} localPlayer={localPlayer} user={user}/>
         {game && user ? 
-          <ChatBox user={user} game={game} localPlayer={localPlayer}/>
-          :
-          <></>}
-          </>
-      :
-      <></>
-      }
+            <ChatBox user={user} game={game} localPlayer={localPlayer}/>
+            :
+            <></>}
+        </>
+    :
+    <></>
+    }
     </div>
-  )
+)
 }
 
 export default Game

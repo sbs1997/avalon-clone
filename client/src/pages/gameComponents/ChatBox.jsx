@@ -16,7 +16,7 @@ function ChatBox({user, game, localPlayer}) {
         fetch(`/api/messages/game/${game.id}`)
         .then(r=>r.json())
         .then((serverMessages)=>{
-            console.log(serverMessages)
+            // console.log(serverMessages)
             setMessages(serverMessages)
         })
         return () => {
