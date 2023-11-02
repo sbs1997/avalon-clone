@@ -1,16 +1,21 @@
 import React from 'react'
 import LobbyDisplay from './LobbyDisplay'
+import QuestTeamBuild from './QuestTeamBuild'
 
-function Display({ phase, game, user, socket, localPlayer, setGame, setPhase}) {
+function Display({ game, user, socket }) {
     // console.log(game)
     return (
         <div className='game-display'>
             {game ?
                 <><h1>{game.title}</h1>
-                {(phase == "notStarted" )? 
+                {(game.phase == "pregame" )? 
                     <LobbyDisplay game={game} user={user} socket={socket} />
                     :
-                    <></>
+                    game.phase == "team_building" ? 
+                        <QuestTeamBuild game={game} user={user} socket={socket} />
+                        :
+                        <></>
+                
                 }
                 </>
                 :

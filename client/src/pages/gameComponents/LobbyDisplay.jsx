@@ -1,29 +1,22 @@
 import React from 'react'
 
-function LobbyDisplay({game, user, socket, localSocket}) {
+function LobbyDisplay({game, user, socket}) {
     
     function handleLeave(){
         socket.emit('leave-game', game.id, user.id, socket.id)
-        // // console.log(localPlayer)
-        // fetch(`/api/players/${localPlayer.id}`, {
-        //     method: "DELETE",
-        // })
-        // .then(()=>{
-        //     // console.log(game)
-        //     // console.log(user)
-        //     fetch(`/api/games/${game.id}/${user.id}`)
-        //     .then(r=>r.json())
-        //     .then((serverGame)=>{
-        //         setGame(serverGame)
-        //     })
-        // })
     }
 
+    function handleStart(){
+        socket.emit('start-game', game.id)
+    }
+    
     return (
         <>
             <h2>Players:</h2>
             {game.players.map((player)=> <p key={game.players.indexOf(player)}>{player.user.username}</p>)}
-            <button onClick={handleLeave}>Leave Game</button>
+            {game.owner ? <button onClick={handleStart}>Start Game!</button>
+            :
+            <button onClick={handleLeave}>Leave Game</button>}
         </>
     )
 }

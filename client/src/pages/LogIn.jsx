@@ -26,7 +26,6 @@ function LogIn({user, setUser}) {
 
       if (response.ok) {
         const userR = await response.json();
-        // console.log(userR)
         setUser(userR)
         console.log('Logged in as:', userR.username);
         navigate('/')

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react'
-// import { io } from 'socket.io-client'
 import Message from './Message'
 
 
@@ -8,20 +7,12 @@ function ChatBox({user, game, localPlayer, socket, connected}) {
     const [newMessage, setNewMessage] = useState("")
     // console.log(user)
 
+    // Fetch the messages in the server
     useEffect(() => {
-        // fetch(`/api/messages/game/${game.id}`)
-        // .then(r=>r.json())
-        // .then((serverMessages)=>{
-        //     setMessages(serverMessages)
-        // })
-        // socket.on('messages-fetched', (serverMessages)=>{
-        //     console.log(serverMessages)
-        //     setMessages(serverMessages)
-        // })
-        // socket.emit('message-request', game.id)
-        socket.emit('message-request', game.id)
+        socket.emit('message-request', game.id, socket.id)
     }, []);
 
+    // add an event listener for new messages from the server
     useEffect(() => {
         // console.log("use effect")
         if (connected){

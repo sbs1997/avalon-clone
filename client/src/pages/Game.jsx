@@ -13,9 +13,7 @@ function Game({ user }) {
     let {gameId} = useParams()
     const [game, setGame] = useState()
     const [localPlayer, setLocalPlayer] = useState({})
-    const [phase, setPhase] = useState("notStarted")
     const [connected, setConnected] = useState(false)
-    const [localSocket, setLocalSocket] = useState('')
     const navigate = useNavigate()
     // console.log(user)
 
@@ -36,7 +34,6 @@ function Game({ user }) {
             console.log(socket.id)
             console.log(gameId)
             setConnected(true)
-            setLocalSocket(socket.id)
             socket.emit('set-room', gameId, user.id, socket.id)
         })
         socket.on('update-game', (newGame)=>{
@@ -45,11 +42,8 @@ function Game({ user }) {
             setLocalPlayer(newGame.players.filter((player)=>(player.user.id == user.id))[0])
         })
         return () => {
-            console.log('thing!')
+            console.log('disconnected!!')
             socket.disconnect()
-            // socket.off('disconnected', (msg) => {
-            //     console.log(msg);
-            // });
         }
     },[])
 
@@ -71,7 +65,7 @@ function Game({ user }) {
             <NotJoinedDisplay game={game} user={user} socket={socket}/>
             :
             <>
-            <Display phase={phase} setPhase={setPhase} game={game} setGame={setGame} localPlayer={localPlayer} user={user} socket={socket} localSocket={localSocket}/>
+            <Display game={game} setGame={setGame} localPlayer={localPlayer} user={user} socket={socket}/>
             {game && user && socket? 
                 <ChatBox socket={socket} user={user} game={game} localPlayer={localPlayer} connected={connected}/>
                 :
