@@ -6,6 +6,7 @@ import Message from './Message'
 function ChatBox({user, game, localPlayer, socket, connected}) {
     const [messages, setMessages] = useState([])
     const [newMessage, setNewMessage] = useState("")
+    // console.log(user)
 
     useEffect(() => {
         // fetch(`/api/messages/game/${game.id}`)
@@ -13,10 +14,11 @@ function ChatBox({user, game, localPlayer, socket, connected}) {
         // .then((serverMessages)=>{
         //     setMessages(serverMessages)
         // })
-        socket.on('messages-fetched', (serverMessages)=>{
-            console.log(serverMessages)
-            setMessages(serverMessages)
-        })
+        // socket.on('messages-fetched', (serverMessages)=>{
+        //     console.log(serverMessages)
+        //     setMessages(serverMessages)
+        // })
+        // socket.emit('message-request', game.id)
         socket.emit('message-request', game.id)
     }, []);
 
@@ -28,6 +30,10 @@ function ChatBox({user, game, localPlayer, socket, connected}) {
                 addMessage(serverMessage)
             })
             }
+            socket.on('messages-fetched', (serverMessages)=>{
+                setMessages(serverMessages)
+            })
+
             return () => {
             // console.log('clean-up!')
             socket.removeListener('server-message', (msg) => {
@@ -37,11 +43,12 @@ function ChatBox({user, game, localPlayer, socket, connected}) {
     }, [messages, connected, localPlayer])
     
     function sendMessage(playerID, message, room){
+        // console.log(localPlayer)
+        // console.log(playerID)
         socket.emit('client-message', playerID, message, room)
     }
     
     function addMessage(message){
-        console.log(message)
         setMessages([...messages, message])
     }
 
@@ -49,7 +56,7 @@ function ChatBox({user, game, localPlayer, socket, connected}) {
         <div>
             <div className="chat-box">
                 {messages.toReversed().map((message)=>{
-                {/* {messages.map((message)=>{ */}
+                    // console.log(message)
                     return <Message 
                         key={messages.indexOf(message)} 
                         message={message}

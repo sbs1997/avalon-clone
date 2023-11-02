@@ -1,21 +1,22 @@
 import React from 'react'
 
-function LobbyDisplay({game, user, localPlayer, setGame}) {
-    console.log(game)
+function LobbyDisplay({game, user, socket, localSocket}) {
+    
     function handleLeave(){
-        // console.log(localPlayer)
-        fetch(`/api/players/${localPlayer.id}`, {
-            method: "DELETE",
-        })
-        .then(()=>{
-            console.log(game)
-            console.log(user)
-            fetch(`/api/games/${game.id}/${user.id}`)
-            .then(r=>r.json())
-            .then((serverGame)=>{
-                setGame(serverGame)
-            })
-        })
+        socket.emit('leave-game', game.id, user.id, socket.id)
+        // // console.log(localPlayer)
+        // fetch(`/api/players/${localPlayer.id}`, {
+        //     method: "DELETE",
+        // })
+        // .then(()=>{
+        //     // console.log(game)
+        //     // console.log(user)
+        //     fetch(`/api/games/${game.id}/${user.id}`)
+        //     .then(r=>r.json())
+        //     .then((serverGame)=>{
+        //         setGame(serverGame)
+        //     })
+        // })
     }
 
     return (

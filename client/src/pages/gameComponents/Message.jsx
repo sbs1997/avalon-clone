@@ -1,8 +1,6 @@
 import React from 'react'
 
 function Message({message, user}) {
-  console.log(user)
-  console.log(message)
   const sender = message.player.user.username
   // console.log(message)
   // console.log(user)

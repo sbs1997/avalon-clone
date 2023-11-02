@@ -15,8 +15,15 @@ function Game({ user }) {
     const [localPlayer, setLocalPlayer] = useState({})
     const [phase, setPhase] = useState("notStarted")
     const [connected, setConnected] = useState(false)
+    const [localSocket, setLocalSocket] = useState('')
     const navigate = useNavigate()
+    // console.log(user)
 
+    const playerChangeHandler = (newPlayers)=>{
+        console.log(newPlayers)
+        console.log('player change!')
+        setGame({...game, players: newPlayers})
+    }
 
 
     useEffect(()=>{
@@ -24,32 +31,35 @@ function Game({ user }) {
         if (!user.id){
             navigate('/login')
         }
-        // fetch(`/api/games/${gameId}/${user.id}`)
-        // .then(r=>r.json())
-        // .then((serverGame)=>{
-        //     setGame(serverGame)
-        //     if (serverGame.role !== "imposter"){
-        //         // console.log('in there!')
-        //         // console.log(user)
-        //         // console.log(serverGame)
-        //         setLocalPlayer(serverGame.players.filter((player)=>(player.user.id == user.id))[0])
-        //     }
-        //     socket = io('ws://localhost:5555');
-        //     setConnected(true)
-        //     socket.emit('set-room', serverGame.id, user.id)
-        // })
         socket = io('ws://localhost:5555');
-        setConnected(true)
-        socket.emit('set-room', gameId, user.id)
+        socket.on('connect', ()=>{
+            console.log(socket.id)
+            console.log(gameId)
+            setConnected(true)
+            setLocalSocket(socket.id)
+            socket.emit('set-room', gameId, user.id, socket.id)
+        })
         socket.on('update-game', (newGame)=>{
+            console.log('update-game')
             setGame(newGame)
+            setLocalPlayer(newGame.players.filter((player)=>(player.user.id == user.id))[0])
         })
         return () => {
-            socket.off('disconnected', (msg) => {
-                console.log(msg);
-            });
+            console.log('thing!')
+            socket.disconnect()
+            // socket.off('disconnected', (msg) => {
+            //     console.log(msg);
+            // });
         }
     },[])
+
+    useEffect(()=>{
+        console.log('update player change')
+        socket.on('player-change', playerChangeHandler)
+        return ()=>{
+            socket.off('player-change', playerChangeHandler)
+        }
+    }, [game, connected])
 
 
     return (
@@ -58,10 +68,10 @@ function Game({ user }) {
         <p>Sorry you're not in this game and it has started</p>
         :
         game.role == 'imposter' ? 
-            <NotJoinedDisplay game={game} user={user} setGame={setGame}/>
+            <NotJoinedDisplay game={game} user={user} socket={socket}/>
             :
             <>
-            <Display phase={phase} setPhase={setPhase} game={game} setGame={setGame} localPlayer={localPlayer} user={user}/>
+            <Display phase={phase} setPhase={setPhase} game={game} setGame={setGame} localPlayer={localPlayer} user={user} socket={socket} localSocket={localSocket}/>
             {game && user && socket? 
                 <ChatBox socket={socket} user={user} game={game} localPlayer={localPlayer} connected={connected}/>
                 :

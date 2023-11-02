@@ -26,7 +26,7 @@ function LogIn({user, setUser}) {
 
       if (response.ok) {
         const userR = await response.json();
-        console.log(userR)
+        // console.log(userR)
         setUser(userR)
         console.log('Logged in as:', userR.username);
         navigate('/')
@@ -51,7 +51,7 @@ function LogIn({user, setUser}) {
             value={username}
             onChange={(e) => {
               setUsername(e.target.value)
-              console.log(username)
+              // console.log(username)
             }}
           />
         </div>

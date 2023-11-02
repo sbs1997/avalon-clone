@@ -1,27 +1,16 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 
-function NotJoinedDisplay({game, setGame, user}) {
+function NotJoinedDisplay({game, user, socket}) {
+    
     function handleJoin(){
+        console.log(socket.id)
+        console.log(game.id)
         const newPlayer = {
             userID: user.id,
             gameID: game.id,
-            owner: false
+            socketID: socket.id
         }
-        fetch(`/api/players`, {
-            headers: { "Content-Type": "application/json"},
-            method: "POST",
-            body: JSON.stringify(newPlayer)
-        })
-        .then(()=>{
-            fetch(`/api/games/${game.id}/${user.id}`)
-            .then(r=>r.json())
-            .then((serverGame)=>{
-                setGame(serverGame)
-                // if (serverGame.role !== "imposter"){
-                //     setLocalPlayer(serverGame.players.filter((player)=>(player.user.id == user.id))[0])
-                // }
-            })
-        })
+        socket.emit('join-game', newPlayer)
     }
 
     return (

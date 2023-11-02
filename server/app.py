@@ -14,6 +14,8 @@ def game_info(game_id, user_id):
     if not player:
         response_game["role"] = 'imposter'
     else:
+        # if not player.role:
+        #     response_game["role"] = None
         if player.role == "good":
             pass
         if player.role == 'evil' or player.role == 'merlin':
@@ -22,7 +24,7 @@ def game_info(game_id, user_id):
         response_game["role"] = player.role
         if player.owner:
             response_game["owner"] = True
-    socket_io.emit('update-game', response_game)
+    return response_game
 
 ####################### SOCKET STUFF #########################
 
@@ -34,21 +36,66 @@ def handle_connect():
 
 @socket_io.on('client-message')
 def chat_message(playerID, message, room):
+    print(playerID)
     new_message = ChatMessage(player_id = playerID, message = message)
     db.session.add(new_message)
+    # print(new_message.to_dict())
     db.session.commit()
+    print(new_message.to_dict())
     
     socket_io.emit('server-message', new_message.to_dict(), room = room)
     
 @socket_io.on('set-room')
-def change_room(game_id, user_id):
+def change_room(game_id, user_id, socket_id):
+    print(socket_id)
     room = f'game{game_id}'
     join_room(room)
-    game_info(game_id, user_id)
+
+    socket_io.emit('update-game', game_info(game_id, user_id), room = socket_id)
+
+
+@socket_io.on('join-game')
+def add_player(player_info):
+    print(player_info)
+    try:
+        new_player = Player(
+            user_id = player_info['userID'],
+            game_id = player_info['gameID'],
+            role = None,
+            owner = False,
+            winner = False
+        )
+        db.session.add(new_player)
+        db.session.commit()
+
+        socket_io.emit('update-game', game_info(new_player.game_id, new_player.user_id), room = player_info['socketID'])
+
+        players = [p.to_dict() for p in Player.query.filter(Player.game_id == player_info['gameID']).all()]
+        # print(players)
+
+        socket_io.emit('player-change', players)
+
+    except ValueError:
+        socket_io.emit('join-error')
+
+
+@socket_io.on('leave-game')
+def add_player(game_id, user_id, sender_socket):
+    player = Player.query.filter(Player.user_id == user_id).filter(Player.game_id == game_id).first()
+
+    db.session.delete(player)
+    db.session.commit()
+
+    socket_io.emit('update-game', game_info(game_id, user_id), room = sender_socket)
+
+    players = [p.to_dict() for p in Player.query.filter(Player.game_id == game_id).all()]
+    # print(players)
+
+    socket_io.emit('player-change', players)
 
 @socket_io.on('message-request')
 def messages_by_game_id(game_id):
-    messages = [m.to_dict() for m in ChatMessage.query.join(Player).filter(Player.game_id == id).all()]
+    messages = [m.to_dict() for m in ChatMessage.query.join(Player).filter(Player.game_id == game_id).all()]
     socket_io.emit('messages-fetched', messages)
 
 
