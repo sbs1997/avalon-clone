@@ -50,6 +50,8 @@ class Player(db.Model, SerializerMixin):
     user = db.relationship('User', back_populates = 'players')
     game = db.relationship('Game', back_populates = 'players')
     chat_messages = db.relationship('ChatMessage', back_populates = 'player')
+    votes = db.relationship("Vote", back_populates = 'player')
+    questers = db.relationship("Quester", back_populates = 'player')
 
 
     serialize_rules = ('-user.players', '-game.players', '-chat_messages', '-user._password_hash')
@@ -70,7 +72,9 @@ class Game(db.Model, SerializerMixin):
 
     # relationships
     players = db.relationship('Player', back_populates = 'game')
-    serialize_rules = ('-players.game', '-players.user._password_hash',)
+    rounds = db.relationship('Round', back_populates = 'game')
+
+    serialize_rules = ('-players.game', '-players.user._password_hash', '-rounds.game')
 
 class ChatMessage(db.Model, SerializerMixin):
     __tablename__ = 'chat_messages'
@@ -83,3 +87,43 @@ class ChatMessage(db.Model, SerializerMixin):
     player = db.relationship('Player', back_populates = 'chat_messages')
     
     serialize_only = ('player.user.username', 'player.user.id', 'player.game_id', 'message', 'time')
+
+class Round(db.Model, SerializerMixin):
+    __tablename__ = 'rounds'
+
+    id = db.Column(db.Integer, primary_key = True)
+    game_id = db.Column(db.Integer, db.ForeignKey('games.id'))
+    number = db.Column(db.Integer)
+    quest_size = db.Column(db.Integer)
+    winner = db.Column(db.String)
+    team_votes_failed = db.Column(db.Integer)
+
+    game = db.relationship('Game', back_populates = 'rounds')
+    votes = db.relationship('Vote', back_populates = 'round')
+    questers = db.relationship('Quester', back_populates = 'round')
+
+    serialize_only = ('number', 'quest_size', 'winner', 'team_votes_failed', 'questers.player.user.id', 'questers.player.user.username')
+
+class Vote(db.Model, SerializerMixin):
+    __tablename__ = 'votes'
+
+    id = db.Column(db.Integer, primary_key = True)
+    player_id = db.Column(db.Integer, db.ForeignKey('players.id'))
+    round_id = db.Column(db.Integer, db.ForeignKey('rounds.id'))
+    vote_type = db.Column(db.String)
+    voted_for = db.Column(db.Boolean)
+
+    player = db.relationship('Player', back_populates = "votes")
+    round = db.relationship('Round', back_populates = 'votes')
+
+class Quester(db.Model, SerializerMixin):
+    __tablename__ = 'questers'
+
+    id = db.Column(db.Integer, primary_key = True)
+    player_id = db.Column(db.Integer, db.ForeignKey('players.id'))
+    round_id = db.Column(db.Integer, db.ForeignKey('rounds.id'))
+
+    player = db.relationship('Player', back_populates = "questers")
+    round = db.relationship('Round', back_populates = 'questers')
+
+    serialize_only = ('player.user.username', 'player.user.id', 'id')

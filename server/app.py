@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 from flask import request, session, make_response
 from flask_restful import Resource
-from config import app, db, api, socket_io, random
-from models import User, Player, Game, ChatMessage
+from config import app, db, api, socket_io, random, or_
+from models import User, Player, Game, ChatMessage, Round, Quester, Vote
 from flask_socketio import join_room, leave_room
 
 
@@ -10,26 +10,26 @@ from flask_socketio import join_room, leave_room
 def game_info(game_id, user_id):
     game = Game.query.filter(Game.id == game_id).first()
     player = Player.query.filter(Player.game_id == game_id).filter(Player.user_id == user_id).first()
-    response_game = game.to_dict(only=('id', 'title', 'size', 'round', 'phase', 'room_code', 'percival', 'mordred', 'oberon', 'morgana', 'players.user.username', 'players.user.id', 'players.leader', 'players.id'))
+    response_game = game.to_dict(only=('id', 'title', 'size', 'phase', 'rounds', 'round', 'room_code', 'percival', 'mordred', 'oberon', 'morgana', 'players.user.username', 'players.user.id', 'players.leader', 'players.id'))
     if not player:
         response_game["role"] = 'imposter'
-    else:
-        # if not player.role:
-        #     response_game["role"] = None
+    else: 
         if player.role == "good":
             pass
         if player.role == 'evil' or player.role == 'merlin' or player.role == 'assassin':
-            evil_players = [p.user_id for p in Player.query.filter(Player.game_id == game_id).filter(Player.role == "evil").all()]
+            evil_players = [p.user_id for p in Player.query.filter(Player.game_id == game_id).filter(or_(Player.role == "evil", Player.role == 'assassin')).all()]
             response_game['baddies'] = evil_players
         response_game["role"] = player.role
         if player.owner:
             response_game["owner"] = True
+        if player.leader:
+            response_game["leader"] = True
+        # print(response_game)
     return response_game
 
-# gets the info that needs to be sent out at the beginning of the quest team building phase
-def quest_team_info(game):
-    game.phase = 'team_building'
-    game.round = game.round+1
+# starts the quest_team selection phase
+def quest_team_start(game):
+
     quest_size_dict = {
         5 : [2,3,2,3,3],
         6 : [2,3,4,3,4],
@@ -38,7 +38,24 @@ def quest_team_info(game):
         9 : [3,4,4,5,5],
         10: [3,4,4,5,5]
     }
-    return quest_size_dict[game.size][game.round-1]
+
+    game.phase = 'team_building'
+    game.round = game.round+1
+    # create round
+    new_round= Round(
+        game_id = game.id,
+        number = game.round,
+        quest_size = quest_size_dict[game.size][game.round-1],
+        winner = None,
+        team_votes_failed = 0
+    )
+    
+    db.session.add(new_round)
+    db.session.commit()
+
+
+    # (number of people on quest, round number)
+    socket_io.emit('new quest voting', new_round.to_dict())
 
 ####################### SOCKET STUFF #########################
 
@@ -59,6 +76,13 @@ def chat_message(playerID, message, room):
     # print(new_message.to_dict())
     
     socket_io.emit('server-message', new_message.to_dict(), room = room)
+    
+# listen for requests for game info
+@socket_io.on('info-req')
+def info_request(game_id, user_id, socket_id):
+        print('info request')
+        socket_io.emit('update-game', game_info(game_id, user_id), room = socket_id)
+    
     
 # listen for client request to be set to a room
 @socket_io.on('set-room')
@@ -122,7 +146,8 @@ def messages_by_game_id(game_id, socket_id):
 # START THE GAME! EXCITING!
 @socket_io.on('start-game')
 def start_game(game_id):
-    game = Game.query.filter(Game.id==game_id)
+    print('starting!')
+    game = Game.query.filter(Game.id==game_id).first()
     
     # number of evil players in a game based on total size
     evil_size_dict = {
@@ -137,29 +162,85 @@ def start_game(game_id):
     # 
     # assign roles
     # first get/set the size of the game:
+    # print(game.players)
     game.size=len(game.players)
+    game.round = 0
+
+    # clear rounds
+    game_rounds = Round.query.filter(Round.game_id == game.id).all()
+    for round in game_rounds:
+        db.session.delete(round)
+    db.session.commit
 
     # set all the players roles to good and then add them to our list of good players
     good_players = []
+    baddies = []
+    assassin_selected = False
     for player in game.players:
         player.role = 'good'
         good_players.append(player)
 
-    for i in range(evil_size_dict[game.size]):
-        baddie = random.choice(good_players)
-        if i == 0:
-            baddie.role == 'assassin'
+    # pick the appropriate number of players and make them evil. the first one will be the assassin
+    for baddie in random.sample(game.players, evil_size_dict[game.size]):
+        # print(f'{baddie.id} is an')
+        if not assassin_selected:
+            # print('assassin')
+            assassin_selected = True
+            baddie.role = 'assassin'
+            # print(f'i said {baddie.role}')
         else:
-            baddie.role == 'evil'
+            # print('evil')
+            baddie.role = 'evil'
+
         good_players.remove(baddie)
+        baddies.append(baddie)
+
+    # print(good_players)
+    # print(baddies)
+
+    for player in good_players:
+        player.leader = None
+        # print(f'{player} is {player.role}')
+        db.session.add(player)
+    for player in baddies:
+        player.leader = None
+        # print(f'{player} is {player.role}')
+        db.session.add(player)
+
+    db.session.commit()
+
+    prefirst_leader = random.choice(game.players)
+    prefirst_leader.leader = True
+    db.session.add(prefirst_leader)
+    db.session.commit()
+
+    quest_team_start(game)
     
-    
+    socket_io.emit('game-started')
 
 
 
-    game.round = 1
-    game.phase
 
+# listen for changes to the proposed quest team
+@socket_io.on('update-qt')
+def update_qt(player_id, round_num, game_id):
+    round = Round.query.filter(Round.game_id == game_id).filter(Round.number == round_num).first()
+    quester = Quester.query.filter(Quester.player_id == player_id).filter(Quester.round_id == round.id).first()
+    # print(quester)
+    if quester:
+        # print('deletem')
+        db.session.delete(quester)
+        db.session.commit()
+    else:
+
+        new_quester = Quester(
+            player_id = player_id,
+            round_id = round.id
+        )
+        db.session.add(new_quester)
+        db.session.commit()
+    questers = [q.to_dict() for q in Quester.query.filter(Quester.round_id == round.id).all()]
+    socket_io.emit('updated-qt', questers)
 
 @socket_io.on("disconnect")
 def disconnected():
@@ -167,8 +248,9 @@ def disconnected():
     print("user disconnected")
 
 
-
+################################################################
 ######################### ROUTES!!!!! ##########################
+################################################################
 @app.route('/')
 def index():
     return '<h1>Avalon Server!</h1>'
