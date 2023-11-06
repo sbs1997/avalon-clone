@@ -44,7 +44,7 @@ function ChatBox({user, game, localPlayer, socket, connected}) {
     }
 
     return (
-        <div>
+        <div className='chat-component'>
             <div className="chat-box">
                 {messages.toReversed().map((message)=>{
                     // console.log(message)

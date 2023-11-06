@@ -1,27 +1,24 @@
 import React from 'react'
-import LobbyDisplay from './LobbyDisplay'
-import QuestTeamBuild from './QuestTeamBuild'
+import LobbyDisplay from './displayComponents/LobbyDisplay'
+import QuestTeamBuildDisplay from './displayComponents/QuestTeamBuildDisplay'
+import QuestTeamVoteDisplay from './displayComponents/QuestTeamVoteDisplay'
 
-function Display({ game, user, socket }) {
+function Display({ game, user, socket, questTeam, setQuestTeam }) {
     // console.log(game)
     return (
         <div className='game-display'>
-            {game ?
-                <><h1>{game.title}</h1>
                 {(game.phase == "pregame" )? 
                     <LobbyDisplay game={game} user={user} socket={socket} />
                     :
                     game.phase == "team_building" ? 
-                        <QuestTeamBuild game={game} user={user} socket={socket} />
+                        <QuestTeamBuildDisplay game={game} user={user} socket={socket} questTeam={questTeam} setQuestTeam={setQuestTeam}/>
                         :
-                        <></>
-                
+                        game.phase == "qt-voting" ?
+                            <QuestTeamVoteDisplay game={game} user={user} socket={socket} questTeam={questTeam} />
+                            :
+                            <></>
                 }
-                </>
-                :
-                <></>
-            }
-        </div>
+        </div> 
     )
 }
 

@@ -64,6 +64,7 @@ class Game(db.Model, SerializerMixin):
     size = db.Column(db.Integer)
     round = db.Column(db.Integer)
     phase = db.Column(db.String)
+    # options are "pregame", "team_building", "qt_voting"
     room_code = db.Column(db.String)
     percival = db.Column(db.Boolean)
     mordred = db.Column(db.Boolean)
@@ -74,7 +75,7 @@ class Game(db.Model, SerializerMixin):
     players = db.relationship('Player', back_populates = 'game')
     rounds = db.relationship('Round', back_populates = 'game')
 
-    serialize_rules = ('-players.game', '-players.user._password_hash', '-rounds.game')
+    serialize_rules = ('-players.game', '-players.user._password_hash', '-rounds.game', '-players.votes')
 
 class ChatMessage(db.Model, SerializerMixin):
     __tablename__ = 'chat_messages'
@@ -111,10 +112,13 @@ class Vote(db.Model, SerializerMixin):
     player_id = db.Column(db.Integer, db.ForeignKey('players.id'))
     round_id = db.Column(db.Integer, db.ForeignKey('rounds.id'))
     vote_type = db.Column(db.String)
+    # types are "team" or "success"
     voted_for = db.Column(db.Boolean)
 
     player = db.relationship('Player', back_populates = "votes")
     round = db.relationship('Round', back_populates = 'votes')
+
+    serialize_rules = ('-player.votes', )
 
 class Quester(db.Model, SerializerMixin):
     __tablename__ = 'questers'
@@ -126,4 +130,4 @@ class Quester(db.Model, SerializerMixin):
     player = db.relationship('Player', back_populates = "questers")
     round = db.relationship('Round', back_populates = 'questers')
 
-    serialize_only = ('player.user.username', 'player.user.id', 'id')
+    serialize_only = ('player.user.username', 'player.user.id', 'id', 'player.leader')

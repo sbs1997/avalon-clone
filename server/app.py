@@ -231,16 +231,62 @@ def update_qt(player_id, round_num, game_id):
         # print('deletem')
         db.session.delete(quester)
         db.session.commit()
-    else:
 
-        new_quester = Quester(
-            player_id = player_id,
-            round_id = round.id
-        )
-        db.session.add(new_quester)
-        db.session.commit()
+        questers = [q.to_dict() for q in Quester.query.filter(Quester.round_id == round.id).all()]
+        socket_io.emit('updated-qt', questers, room = f"game{game_id}")
+    else:
+        if len(round.questers) <= round.quest_size:
+            new_quester = Quester(
+                player_id = player_id,
+                round_id = round.id
+            )
+            db.session.add(new_quester)
+            db.session.commit()
+            questers = [q.to_dict() for q in Quester.query.filter(Quester.round_id == round.id).all()]
+            socket_io.emit('updated-qt', questers, room = f"game{game_id}")
+        else:
+            print("didn't update :) ")
+            socket_io.emit('not-updated-qt', room = f"game{game_id}")
+
+
+@socket_io.on('submit-qt')
+def qt_submitted(game_id):
+    game = Game.query.filter(Game.id == game_id).first()
+    game.phase = 'qt-voting'
+    db.session.add(game)
+    db.session.commit()
+    
+    socket_io.emit('qt-submitted', room = f"game{game_id}")
+
+@socket_io.on('qt-request')
+def qt_request(game_id, round_num):
+    round = Round.query.filter(Round.game_id == game_id).filter(Round.number == round_num).first()
     questers = [q.to_dict() for q in Quester.query.filter(Quester.round_id == round.id).all()]
-    socket_io.emit('updated-qt', questers)
+    print(round)
+    print(questers)
+    socket_io.emit('updated-qt', questers, room = f"game{game_id}")
+
+@socket_io.on('quest-team-vote')
+def quest_team_vote(value, user_id, game_id, socket_id):
+    game = Game.query.filter(Game.id == game_id).first()
+    round = Round.query.filter(Round.game_id == game_id).filter(Round.number == game.round).first()
+    player = Player.query.filter(Player.user_id == user_id).filter(Player.game_id == game_id).first()
+    vote = Vote.query.filter(Vote.player_id == player.id).filter(Vote.round_id == round.id).first()
+    if not vote:
+        vote = Vote(
+            player_id = player.id,
+            round_id = round.id,
+            vote_type = "team",
+            voted_for = value
+        )
+        db.session.add(vote)
+        db.session.commit()
+        voted = [u.id for u in User.query.join(Player).join(Vote).filter(Vote.round_id == round.id).all()]
+        socket_io.emit('quest-vote-cast', voted, room = f'game{game_id}')
+    else:
+        voted = [u.id for u in User.query.join(Player).join(Vote).filter(Vote.round_id == round.id).all()]
+        socket_io.emit('quest-vote-cast', voted, room = socket_id)
+    socket_io.emit('quest-vote-reciept', vote.to_dict(), room = socket_id)
 
 @socket_io.on("disconnect")
 def disconnected():
