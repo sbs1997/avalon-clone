@@ -1,10 +1,7 @@
 import React from 'react'
 
 function QuestTeamVoteControls({game, socket, user, questTeam}) {
-    // debugging stuff
-    function handleStart(){
-        socket.emit('start-game', game.id)
-    }
+
 
     function voteYes(){
         socket.emit('quest-team-vote', true, user.id, game.id, socket.id)
@@ -15,13 +12,12 @@ function QuestTeamVoteControls({game, socket, user, questTeam}) {
 
     return (<>
         <div className='approval-controls'>
-            <button onClick={voteYes}>Approve the Quest Team!</button>
-            <button onClick={voteNo}>Vote against the Quest Team!</button>
-            {/* debugging button */}
+            <button onClick={voteYes}>Approve!</button>
+            <button onClick={voteNo}>Reject!</button>
         </div>
         <h3>Proposed Quest Team:</h3>
         {/* see who the evil people are render */}
-        {game.role == 'evil' || game.role == 'merlin' || game.role == 'assassin' ? 
+        {game.role == 'Evil' || game.role == 'Merlin' || game.role == 'Assassin' ? 
             questTeam.map((quester)=> {
             return (<div className='player-line'
                     key={questTeam.indexOf(quester)}>
@@ -48,7 +44,6 @@ function QuestTeamVoteControls({game, socket, user, questTeam}) {
                 </div>)
             })
         }
-        <button onClick={handleStart}>Start Game!</button>
 
     </>)
     

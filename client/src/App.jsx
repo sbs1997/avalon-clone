@@ -12,7 +12,6 @@ import Nav from './pages/components/Nav.jsx';
 import Game from './pages/Game.jsx';
 import LogIn from './pages/LogIn.jsx';
 import NewGameForm from './pages/NewGameForm.jsx';
-import WaitingRoom from './pages/WaitingRoom.jsx';
 import MainMenu from './pages/MainMenu.jsx';
 
 
@@ -28,7 +27,6 @@ function App() {
             <Route path='login' element={<LogIn user={user} setUser={setUser}/>}/>
             <Route path='signup' element={<SignUp user={user} setUser={setUser}/>}/>
             <Route path='new-game' element={<NewGameForm user={user}/>}/>
-            <Route path='waiting-room/:id' element={<WaitingRoom user={user}/>}/>
           </Route>
         )
       )

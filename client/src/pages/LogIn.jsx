@@ -67,8 +67,8 @@ function LogIn({user, setUser}) {
         <button type="button" onClick={handleLogin}>
           Login
         </button>
-        <button type="button" onClick={()=>console.log(user)}>
-          check user
+        <button type="button" onClick={()=>navigate('/signup')}>
+          Sign Up
         </button>
       </form>
     </div>

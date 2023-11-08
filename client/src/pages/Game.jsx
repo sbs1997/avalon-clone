@@ -46,10 +46,28 @@ function Game({ user }) {
         socket.on('game-started', ()=>{
             console.log('game-started')
             socket.emit('info-req', gameId, user.id, socket.id)
+            setQuestTeam([])
         })
         socket.on('qt-submitted', ()=>{
             console.log('quest team proposed!')
             socket.emit('info-req', gameId, user.id, socket.id)
+        })
+        socket.on('all-qt-votes-in', (approval)=>{
+            console.log('all qt votes in')
+            socket.emit('info-req', gameId, user.id, socket.id)
+            if (!approval){
+                console.log('Vote Failed')
+            }
+        })
+        socket.on('quest-failed', (failVotes)=>{
+            console.log(`quest failed ${failVotes} against!`)
+            setTimeout(()=>{socket.emit('info-req', gameId, user.id, socket.id)}, 3000)
+            setQuestTeam([])
+        })
+        socket.on('quest-success', ()=>{
+            console.log('quest succeeded!')
+            setTimeout(()=>{socket.emit('info-req', gameId, user.id, socket.id)}, 3000)
+            setQuestTeam([])
         })
         return () => {
             console.log('disconnected!!')

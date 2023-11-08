@@ -1,13 +1,8 @@
 import React, {useState, useEffect} from 'react'
+import PlayerList from './PlayerList'
+import GameInfo from '../../components/GameInfo'
 
-function QuestTeamBuildDisplay({game, socket, questTeam, setQuestTeam}) {
-
-    const [qtUpdateFailAlert, setQtUpdateFailAlert] = useState(false)
-
-    // useEffect(()=>{
-    //     setTimeout(setQtUpdateFailAlert(false), 1500)
-    // }, [qtUpdateFailAlert])
-    // console.log(game)
+function QuestTeamBuildDisplay({game, socket, setQuestTeam}) {
 
     const updateQT = (newTeam)=>{
         console.log('updated QT')
@@ -15,9 +10,7 @@ function QuestTeamBuildDisplay({game, socket, questTeam, setQuestTeam}) {
     }
 
     const notUpdateQT = () => {
-        console.log(message)
         console.log("didn't update qt")
-        setQtUpdateFailAlert(true)
     }
 
     useEffect(()=>{
@@ -26,6 +19,7 @@ function QuestTeamBuildDisplay({game, socket, questTeam, setQuestTeam}) {
         return ()=>{
             console.log('turned updated-qt off')
             socket.off('updated-qt', updateQT)}
+            socket.off('not-updated-qt', notUpdateQT)
             // socket.off('not-updated-qt', notUpdateQT)
     }, [])
 
@@ -35,41 +29,11 @@ function QuestTeamBuildDisplay({game, socket, questTeam, setQuestTeam}) {
                 console.log('update-qt pls')
                 socket.emit('update-qt', player_id, round_num, game.id)
         }
-
-
     }
     return (
         <>
-            {/* see who the evil people are render */}
-            {game.role == 'evil' || game.role == 'merlin' || game.role == 'assassin' ? 
-                game.players.map((player)=> {
-                return (<div className='player-line'
-                        onClick={()=>clickHandler(player.id, game.round)}
-                        key={game.players.indexOf(player)}>
-                    <p className={game.baddies.includes(player.user.id) ? 
-                        'baddie' 
-                        : 
-                        'unknown'} 
-                        >{player.user.username}</p>
-                    {player.leader ? 
-                        <p> (leader)</p> 
-                        : 
-                        <></>}</div>)
-                    })
-            :
-                // normall people render
-                game.players.map((player)=>{
-                return (<div className='player-line' 
-                    onClick={()=>clickHandler(player.id, game.round)}
-                    key={game.players.indexOf(player)}>
-                        <p>{player.user.username}</p>
-                        {player.leader ? 
-                            <p> (leader)</p> 
-                            : 
-                            <></>}
-                    </div>)})
-            }
-            <p>{qtUpdateFailAlert ? `cannot add more that ${game.rounds[game.round].quest_size} players this round` : ""}</p>
+            <PlayerList game={game} clickHandler={clickHandler}/>
+            <GameInfo game={game} />
         </>
     )
 }

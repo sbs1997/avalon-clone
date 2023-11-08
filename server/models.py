@@ -64,7 +64,7 @@ class Game(db.Model, SerializerMixin):
     size = db.Column(db.Integer)
     round = db.Column(db.Integer)
     phase = db.Column(db.String)
-    # options are "pregame", "team_building", "qt_voting"
+    # options are "pregame", "team_building", "qt_voting" "quest_voting"
     room_code = db.Column(db.String)
     percival = db.Column(db.Boolean)
     mordred = db.Column(db.Boolean)
@@ -98,12 +98,13 @@ class Round(db.Model, SerializerMixin):
     quest_size = db.Column(db.Integer)
     winner = db.Column(db.String)
     team_votes_failed = db.Column(db.Integer)
+    last_votes_for = db.Column(db.Integer)
 
     game = db.relationship('Game', back_populates = 'rounds')
-    votes = db.relationship('Vote', back_populates = 'round')
-    questers = db.relationship('Quester', back_populates = 'round')
+    votes = db.relationship('Vote', back_populates = 'round', cascade="all, delete")
+    questers = db.relationship('Quester', back_populates = 'round', cascade="all, delete")
 
-    serialize_only = ('number', 'quest_size', 'winner', 'team_votes_failed', 'questers.player.user.id', 'questers.player.user.username')
+    serialize_only = ('number', 'quest_size', 'winner', 'team_votes_failed', 'questers.player.user.id', 'questers.player.user.username', 'last_votes_for')
 
 class Vote(db.Model, SerializerMixin):
     __tablename__ = 'votes'
@@ -111,8 +112,8 @@ class Vote(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key = True)
     player_id = db.Column(db.Integer, db.ForeignKey('players.id'))
     round_id = db.Column(db.Integer, db.ForeignKey('rounds.id'))
-    vote_type = db.Column(db.String)
     # types are "team" or "success"
+    vote_type = db.Column(db.String)
     voted_for = db.Column(db.Boolean)
 
     player = db.relationship('Player', back_populates = "votes")
@@ -131,3 +132,5 @@ class Quester(db.Model, SerializerMixin):
     round = db.relationship('Round', back_populates = 'questers')
 
     serialize_only = ('player.user.username', 'player.user.id', 'id', 'player.leader')
+
+
