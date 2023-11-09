@@ -1,30 +1,33 @@
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #1a1a1a;
+  color: #fff;
+  background-color: #1b1b1b;
   text-rendering: optimizeLegibility;
+  
 }
 
 body {
   margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  /* white-space: pre; */
-
-  /* min-width: 100vw;
-  min-height: 100vh; */
+  padding-left: 1em;
 }
 
 h2 {
   font-size: 1.8em;
 }
 .App{
-  max-height: 90vw;
-  max-width: 90vw;
+  /* max-height: 90vw;
+  max-width: 90vw; */
+  /* border: 1px solid #6800cf; */
+  /* padding: 5px */
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-flow: column;
+  
   /* max-width: 100vw;
-  border: 2px solid #242424;
+  border: 2px solid #343434;
   padding: 0 1em 1em 1em;
   border-radius: 10px; */
 }
@@ -42,9 +45,11 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #242424;
+  background-color: #343434;
   cursor: pointer;
   transition: border-color 0.25s;
+  margin-right: 5px;
+  margin-top: 5px;
 }
 button:hover {
   border-color: #646cff;
@@ -57,19 +62,8 @@ input{
 }
 input:focus{
   /* box-shadow: 0.1em 0.1em #535bf2; */
-  outline: #aeb2f9 solid 1px;
+  outline: #8cb4ff solid 1px;
 }
-
-.title {
-  color: #646cff;
-}
-
-
-
-/* #chat-title{
-  min-height: 1.2em;
-  text-align: center;
-} */
 
 .message{
   display: flex;
@@ -87,20 +81,31 @@ input:focus{
 }
 
 .game-card{
-  border: 1px solid #aeb2f9;
+  border: 1px solid #8cb4ff;
   border-radius: 8px;
   /* min-width: 33vw; */
   text-align: center;
+  white-space: pre;
+  padding: 0.5em;
+  margin-bottom: 0.5em;
+  transition: box-shadow 0.5s, background-color 0.5s;
 }
 
+.game-card:hover{
+  box-shadow: 5px 5px 10px #424242;
+  background-color: #111111;
+}
 
-
-.header{
-  grid-area: header;
+.game-header{
+  /* grid-area: header; */
+  /* font-size: 2em; */
   display: flex;
   flex-flow: column nowrap;
   grid-column: 1 / 3;
   grid-row: 1;
+}
+.game-title{
+  font-size: 2em;
 }
 
 .game-display{
@@ -125,12 +130,13 @@ input:focus{
 .chat-box {
   height: 290px;
   max-width: 340px;
-  background-color: #242424;
-  border: 0.5px solid #aeb2f9;
+  background-color: #343434;
+  border: 0.5px solid #8cb4ff;
   border-radius: 5px;
   display: flex;
   flex-flow: column-reverse;
   overflow: scroll;
+  padding-left: 5px;
 }
 .chat-component {
 
@@ -140,14 +146,13 @@ input:focus{
 }
 
 .game-div{
-  /* max-height: 1000px; */
-  /* max-width: 750px; */
+  max-width: 700px;
+  width: 85vw;
   justify-content: stretch;
   align-content: stretch;
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: repeat(7, minmax(10px, 1fr));
-  
 }
 
 .baddie{
@@ -157,7 +162,7 @@ input:focus{
 .player-line{
   padding-left: 0.5em;
   padding-right: 0.5em;
-  background-color: #242424;
+  background-color: #343434;
   border-radius: 5px;
   margin: 0.2em;
   display: flex;
@@ -165,7 +170,7 @@ input:focus{
 }
 
 .info{
-  white-space: pre
+  white-space: pre;
 }
 
 .approval-controls{
@@ -178,11 +183,10 @@ input:focus{
   flex-flow: row nowrap;
   align-content: stretch;
   justify-content: stretch;
-
 }
 
 .score-column{
-  border: 0.5px solid rgba(255, 255, 255, 0.87);
+  border: 0.5px solid #fff;
   width: 115px;
   text-align: center;
   white-space: pre;
@@ -190,4 +194,55 @@ input:focus{
 
 .vote-reciept{
   margin-block: 0;
+}
+
+.new-game-labels{
+  white-space: pre;
+  font-size: 16px;
+}
+
+select{
+  min-width: 2em;
+  font-size: 16px;
+}
+
+#new-game-form{
+  padding: 1em;
+}
+
+form{
+  border-top: 2px solid #fff;
+}
+
+.big-title{
+  font-size: 3em;
+  text-decoration: underline double;
+  padding-bottom: 0.2em;
+}
+.nav-bar{
+  /* border-bottom: 2px solid #fff; */
+  background-color: #6800cf;
+  color: white;
+  padding-top: 0.75em;
+  padding-bottom: 0.75em;
+  margin-bottom: 0.25em;
+  text-align: right;
+  padding-right: 0.5em;
+  padding-left: 0.5em;
+  max-width: 700px;
+  width: 85vw;
+
+}
+
+.nav-bar-item{
+  padding-left: .75em;
+  padding-right: .75em;
+  display: inline;
+  text-decoration: underline;
+  color: #fff;
+
+}
+
+.message-form{
+  border: none;
 }

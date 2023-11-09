@@ -48,6 +48,10 @@ function Game({ user }) {
             socket.emit('info-req', gameId, user.id, socket.id)
             setQuestTeam([])
         })
+        socket.on('updated-qt',  (newTeam)=>{
+            console.log('updated QT')
+            setQuestTeam(newTeam)
+        })
         socket.on('qt-submitted', ()=>{
             console.log('quest team proposed!')
             socket.emit('info-req', gameId, user.id, socket.id)
@@ -61,13 +65,20 @@ function Game({ user }) {
         })
         socket.on('quest-failed', (failVotes)=>{
             console.log(`quest failed ${failVotes} against!`)
-            setTimeout(()=>{socket.emit('info-req', gameId, user.id, socket.id)}, 3000)
+            socket.emit('info-req', gameId, user.id, socket.id)
             setQuestTeam([])
         })
         socket.on('quest-success', ()=>{
             console.log('quest succeeded!')
-            setTimeout(()=>{socket.emit('info-req', gameId, user.id, socket.id)}, 3000)
+            socket.emit('info-req', gameId, user.id, socket.id)
             setQuestTeam([])
+        })
+        socket.on('merlin-assassination', ()=>{
+            console.log('try to assasinate merlin')
+            socket.emit('info-req', gameId, user.id, socket.id)
+        })
+        socket.on('game-over', ()=>{
+            socket.emit('info-req', gameId, user.id, socket.id)
         })
         return () => {
             console.log('disconnected!!')
@@ -91,8 +102,11 @@ function Game({ user }) {
                     <p>Sorry you're not in this game and it has started</p>
                     :
                     <div className='game-div'>
-                        <div className='header'>
-                            <h1>{game.title}: {game.phase}</h1>
+                        <div className='game-header'>
+                            <h1 className='game-title'>{game.title}: {game.phase == "pregame" ? "Pregame Lobby" :
+                                game.phase =="team_building" ? "Team Building": 
+                                    game.phase=="qt_voting" ? "Quest Team Voting" :
+                                        "Questing"}</h1>
                             <h3>{user.username}: {game.role}</h3>
                         </div>
                         {game.role == 'imposter' ? 

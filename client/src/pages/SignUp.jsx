@@ -52,7 +52,7 @@ function SignUp() {
   
     return (
       <div id="signup">
-        <h1 id="signup-title">Sign Up</h1>
+        <h2 id="signup-title">Sign Up</h2>
         <form>
           <div>
             <label htmlFor="username">Username:</label>

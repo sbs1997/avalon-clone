@@ -19,12 +19,14 @@ function MainMenu({user}) {
   },[])
 
   return (
-    <>
-      <div>{user.username}</div>
+    <div className='game-list'>
+      <div className='game-card' onClick={()=>navigate(`/new-game`)}>
+            <h2>Create New Game</h2>
+      </div>
       {games.map((game)=>{
         return <GameCard key={game.id} game={game}/>
       })}
-  </>
+    </div>
   )
 }
 

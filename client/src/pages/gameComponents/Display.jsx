@@ -4,6 +4,8 @@ import QuestTeamBuildDisplay from './displayComponents/QuestTeamBuildDisplay'
 import QuestTeamVoteDisplay from './displayComponents/QuestTeamVoteDisplay'
 import QuestVoteDisplay from './displayComponents/QuestVoteDisplay'
 import Scoreboard from './displayComponents/Scoreboard'
+import OverDisplay from './displayComponents/OverDisplay'
+import AssassinationDisplay from './displayComponents/AssassinationDisplay'
 
 function Display({ game, user, socket, questTeam, setQuestTeam }) {
     // console.log(game)
@@ -24,7 +26,13 @@ function Display({ game, user, socket, questTeam, setQuestTeam }) {
                             game.phase == "quest_voting" ?
                                 <QuestVoteDisplay game={game} user={user} socket={socket} questTeam={questTeam} />
                                 :
-                                <></>
+                                game.phase == "merlin_assassination" ?
+                                    <AssassinationDisplay game={game} socket={socket}/>
+                                    :
+                                    game.phase == "over" ?
+                                        <OverDisplay game={game} />
+                                        :
+                                        <></>
                     }
                 </>
             }

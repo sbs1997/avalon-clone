@@ -10,7 +10,7 @@ function ChatBox({user, game, localPlayer, socket, connected}) {
     // Fetch the messages in the server
     useEffect(() => {
         socket.emit('message-request', game.id, socket.id)
-    }, []);
+    }, [game.round]);
 
     // add an event listener for new messages from the server
     useEffect(() => {
@@ -55,7 +55,7 @@ function ChatBox({user, game, localPlayer, socket, connected}) {
                     />
                 })}
             </div>
-            <form onSubmit={(e)=>{
+            <form className='message-form' onSubmit={(e)=>{
                 e.preventDefault()
                 sendMessage(localPlayer.id, newMessage, `game${game.id}`)
                 setNewMessage("")

@@ -63,8 +63,10 @@ class Game(db.Model, SerializerMixin):
     title = db.Column(db.String)
     size = db.Column(db.Integer)
     round = db.Column(db.Integer)
-    phase = db.Column(db.String)
     # options are "pregame", "team_building", "qt_voting" "quest_voting"
+    phase = db.Column(db.String)
+    # "Good" or "Evil"
+    winner = db.Column(db.String)
     room_code = db.Column(db.String)
     percival = db.Column(db.Boolean)
     mordred = db.Column(db.Boolean)
@@ -96,6 +98,7 @@ class Round(db.Model, SerializerMixin):
     game_id = db.Column(db.Integer, db.ForeignKey('games.id'))
     number = db.Column(db.Integer)
     quest_size = db.Column(db.Integer)
+    # null "Pass" "Fail"
     winner = db.Column(db.String)
     team_votes_failed = db.Column(db.Integer)
     last_votes_for = db.Column(db.Integer)

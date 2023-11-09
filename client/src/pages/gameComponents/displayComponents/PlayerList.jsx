@@ -1,6 +1,6 @@
 import React from 'react'
 
-function PlayerList({game, socket, setQuestTeam, clickHandler}) {
+function PlayerList({game, clickHandler}) {
     return (
         <div className='player-list'>
             {/* see who the evil people are render */}
@@ -15,7 +15,7 @@ function PlayerList({game, socket, setQuestTeam, clickHandler}) {
                         'unknown'} 
                         >{player.user.username}</p>
                     {player.leader ? 
-                        <p>(leader)</p> 
+                        <p> (leader)</p> 
                         : 
                         <p></p>}</div>)
                     })

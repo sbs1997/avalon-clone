@@ -10,7 +10,7 @@ from flask_socketio import join_room, leave_room
 def game_info(game_id, user_id):
     game = Game.query.filter(Game.id == game_id).first()
     player = Player.query.filter(Player.game_id == game_id).filter(Player.user_id == user_id).first()
-    response_game = game.to_dict(only=('id', 'title', 'size', 'phase', 'rounds', 'round', 'room_code', 'percival', 'mordred', 'oberon', 'morgana', 'players.user.username', 'players.user.id', 'players.leader', 'players.id'))
+    response_game = game.to_dict(only=('id', 'title', 'size', 'phase', 'rounds', 'round', 'room_code', 'percival', 'mordred', 'oberon', 'morgana', 'players.user.username', 'players.user.id', 'players.leader', 'players.id', 'players.role', 'winner'))
     if not player:
         response_game["role"] = 'imposter'
     else: 
@@ -25,6 +25,12 @@ def game_info(game_id, user_id):
         if player.leader:
             response_game["leader"] = True
         # print(response_game)
+        if game.phase == "over":
+            evil_players = [p.user_id for p in Player.query.filter(Player.game_id == game_id).filter(or_(Player.role == "Evil", Player.role == 'Assassin')).all()]
+            response_game['baddies'] = evil_players
+        else:
+            for player in response_game['players']:
+                player['role'] = 'unknown' 
     return response_game
 
 # Move the leader to the next player
@@ -48,9 +54,14 @@ def move_leader(game):
 def quest_team_start(game):
     'start a new round'
     move_leader(game)
-    # messages = ChatMessage.query.filter(ChatMessage.player.game_id == game.id).all()
+    # messages = ChatMessage.query.join(Player).filter(Player.game_id == id).all()
     # db.session.delete(messages)
     # db.session.commit()
+    # socket_io.emit('messages-fetched', [])
+    for player in game.players:
+        for message in player.chat_messages:
+            db.session.delete(message)
+    db.session.commit()
     quest_size_dict = {
         5 : [2,3,2,3,3],
         6 : [2,3,4,3,4],
@@ -78,10 +89,39 @@ def quest_team_start(game):
     db.session.add(game)
     db.session.commit()
 
+    socket_io.emit('qt-submitted', room = f"game{game.id}")
+
     # (number of people on quest, round number)
     # socket_io.emit('new quest voting', new_round.to_dict())
 
-####################### SOCKET STUFF #########################
+def check_victory(game):
+    print('checking the game')
+    good_wins = Round.query.filter(Round.game_id == game.id).filter(Round.winner == "Pass").all()
+    print(good_wins)
+    print(len(good_wins))
+    evil_wins = Round.query.filter(Round.game_id == game.id).filter(Round.winner == "Fail").all()
+    print(evil_wins)
+    print(len(evil_wins))
+    if len(good_wins) == 3:
+        game.phase = "merlin_assassination"
+        db.session.add(game)
+        db.session.commit()
+        socket_io.emit('merlin-assassination', room = f"game{game.id}")
+    elif len(evil_wins) == 3:
+        game.phase = "over"
+        game.winner = "Evil"
+        db.session.add(game)
+        db.session.commit()
+        socket_io.emit('game-over', room = f"game{game.id}")
+    else:
+        print('starting the next quest!')
+        quest_team_start(game)
+    
+
+
+###################################################################################
+################################### SOCKET STUFF ##################################
+###################################################################################
 
 @socket_io.on('connect')
 def handle_connect():
@@ -137,10 +177,10 @@ def add_player(player_info):
         players = [p.to_dict() for p in Player.query.filter(Player.game_id == player_info['gameID']).all()]
         # print(players)
 
-        socket_io.emit('player-change', players)
+        socket_io.emit('player-change', players, room= player_info['gameID'])
 
     except ValueError:
-        socket_io.emit('join-error')
+        socket_io.emit('join-error', room = player_info['socketID'])
 
 # listen for client request to leave game
 @socket_io.on('leave-game')
@@ -159,6 +199,14 @@ def remove_player(game_id, user_id, sender_socket):
 
     socket_io.emit('player-change', players, room=f'game{game_id}')
 
+
+# delete the game
+@socket_io.on('delete-game')
+def delete_game(game_id):
+    game = Game.query.filter(Game.id == game_id).first()
+    db.session.delete(game)
+    db.session.commit()
+
 # listen for requests from a client for messages in a room
 @socket_io.on('message-request')
 def messages_by_game_id(game_id, socket_id):
@@ -171,7 +219,7 @@ def messages_by_game_id(game_id, socket_id):
 def start_game(game_id):
     print('starting!')
     game = Game.query.filter(Game.id==game_id).first()
-    
+    game.winner = None
     # number of evil players in a game based on total size
     evil_size_dict = {
         5 : 2,
@@ -243,7 +291,7 @@ def start_game(game_id):
 
     quest_team_start(game)
     
-    socket_io.emit('game-started')
+    socket_io.emit('game-started', room = f"game{game.id}")
 
 
 
@@ -357,19 +405,24 @@ def quest_team_vote(value, user_id, game_id, socket_id):
 def check_quest(round):
     print('checking quest')
     quest_votes = Vote.query.filter(Vote.round_id == round.id).filter(Vote.vote_type == "quest").all()
-    print(f'{len(quest_votes)} == {round.quest_size} ?')
+    # print(f'{len(quest_votes)} == {round.quest_size} ?')
     if round.quest_size == len(quest_votes):
         print('ending quest')
-        votes_against = Vote.query.filter(Vote.round_id == round.id).filter(Vote.vote_type == "quest").filter(not Vote.voted_for).all()
+        votes_against = Vote.query.filter(Vote.round_id == round.id).filter(Vote.vote_type == "quest").filter(Vote.voted_for == False).all()
+        # print(votes_against)
+        # print(len(votes_against))
         if len(votes_against) > 0:
             print('evil votes')
             round.winner = "Fail"
-            socket_io.emit('quest-failed', len(quest_votes))
+            socket_io.emit('quest-failed', len(quest_votes), room=f"game{round.game_id}")
         else:
             print('success')
             round.winner = "Pass"
-            socket_io.emit('quest-success')
-        quest_team_start(round.game)
+            socket_io.emit('quest-success', room=f"game{round.game_id}")
+        db.session.add(round)
+        db.session.commit()
+
+        check_victory(round.game)
         
 
 
@@ -393,7 +446,19 @@ def quest_vote(value, user_id, game_id, socket_id):
     socket_io.emit('quest-reciept', vote.to_dict(), room = socket_id)
     check_quest(round)
     
-    
+@socket_io.on('assassinate')
+def assassinate(target_id):
+    target = Player.query.filter(Player.id == target_id).first()
+    game = target.game
+    if target.role == "Merlin":
+        game.phase = "over"
+        game.winner = "Evil"
+    else:
+        game.phase = "over"
+        game.winner = "Good"
+    db.session.add(game)
+    db.session.commit()
+    socket_io.emit('game-over', room = f"game{game.id}")
 
 
 @socket_io.on("disconnect")
@@ -506,17 +571,20 @@ class Games(Resource):
 
         try:
             new_game = Game(
+                title = data.get("title"),
                 size = data.get("size"),
                 round = 0,
                 phase = "pregame",
-                room_code = data.get('roomCode'),
-                percival = data.get('percival'),
-                mordred = data.get('mordred'),
-                oberon = data.get('oberon'),
-                morgana = data.get('morgana')
+                # room_code = data.get('roomCode'),
+                # percival = data.get('percival'),
+                # mordred = data.get('mordred'),
+                # oberon = data.get('oberon'),
+                # morgana = data.get('morgana')
             )
             db.session.add(new_game)
             db.session.commit()
+
+            return make_response(new_game.to_dict(), 200)
         except ValueError:
             return make_response({"error": ["validation errors"]},406)
         
