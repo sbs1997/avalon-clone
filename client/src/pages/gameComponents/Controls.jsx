@@ -5,9 +5,9 @@ import QuestVoteControls from './controlComponents/QuestVoteControls'
 
 function Controls({game, socket, user, questTeam}) {
     // debugging stuff
-    function handleStart(){
-        socket.emit('start-game', game.id)
-    }
+    // function handleStart(){
+    //     socket.emit('start-game', game.id)
+    // }
     return (
         <div className='controls'>
             {game.phase == 'team_building' ?
@@ -21,7 +21,7 @@ function Controls({game, socket, user, questTeam}) {
                         :
                         <></>
             }
-            <button onClick={handleStart}>Start Game!</button>
+            {/* <button onClick={handleStart}>Start Game!</button> */}
         </div>
     )
 }
